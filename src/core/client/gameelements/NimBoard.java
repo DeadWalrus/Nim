@@ -1,8 +1,9 @@
 package core.client.gameelements;
 
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 
-public class NimBoard extends StackPane {
+public class NimBoard extends Pane {
 
     public NimBoard(){
         this.setStyle("-fx-background-color: blue");

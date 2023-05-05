@@ -58,19 +58,20 @@ public class NimClient  extends Application{
      * Connect to the server
      */
     private void connectToServer(String serverAddress){
-//        if(this.gameInProgress){
-//            this.taConnectionInfo.appendText("Game already in progress");
-//            return;
-//        }
-        Socket server;
+        if(this.match != null && this.match.isRunning()){
+            this.taConnectionInfo.appendText("Game already in progress\n");
+            return;
+        }
+
         try{
-            server = new Socket(serverAddress, 8888);
+            this.server = new Socket(serverAddress, 8888);
             this.taConnectionInfo.appendText("Connected to server with address " + serverAddress + "\n");
             this.match = new MatchService(server);
             match.setOutputLog(this.taConnectionInfo);
             // Wait for server to find match
             // If no match is found, present user with error box.
             new Thread(match).start();
+
             this.gameInProgress = true;
 
         }catch (IOException ex){
@@ -81,7 +82,6 @@ public class NimClient  extends Application{
     private void disconnectFromServer() throws IOException{
         if(this.server != null){
             this.match.endMatch();
-            this.server.shutdownInput();
             this.server.close();
         }
     }
