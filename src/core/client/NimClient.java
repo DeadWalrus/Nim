@@ -1,5 +1,6 @@
 package core.client;
-import core.client.netutils.MatchService;
+import core.client.gameelements.NimBoard;
+import core.client.netutils.ClientSessionHandler;
 import javafx.application.Application;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -13,11 +14,12 @@ import javafx.scene.Scene;
 import java.io.IOException;
 import java.net.Socket;
 
-public class NimClient  extends Application{
+public class NimClient extends Application{
     private TextArea taConnectionInfo;
-    private boolean gameInProgress;
     private Socket server;
-    MatchService match;
+    NimBoard nimBoard;
+    NimMatchDisplay nmd;
+    ClientSessionHandler clientSessionHandler;
     /**
      * Initialize GUI for the client
      * @param primaryStage Main window
@@ -26,13 +28,18 @@ public class NimClient  extends Application{
         BorderPane primaryPane = new BorderPane();
         primaryPane.setPrefSize(400, 400);
         primaryPane.setBottom(this.getBottomPane());
+
         this.taConnectionInfo = new TextArea();
+        this.nimBoard = new NimBoard();
+        this.nmd = new NimMatchDisplay(this.nimBoard);
         primaryPane.setCenter(this.taConnectionInfo);
         Scene primaryScene = new Scene(primaryPane);
         primaryStage.setScene(primaryScene);
         primaryStage.setTitle("Welcome to Nim");
         primaryStage.show();
+
         primaryStage.setOnCloseRequest(e -> {
+            this.nmd.close();
            try{
                disconnectFromServer();
                System.out.println("Disconnected");
@@ -40,6 +47,7 @@ public class NimClient  extends Application{
                System.out.println("Could not close connection to server");
            }
         });
+
     }
 
     /**
@@ -58,34 +66,24 @@ public class NimClient  extends Application{
      * Connect to the server
      */
     private void connectToServer(String serverAddress){
-        if(this.match != null && this.match.isRunning()){
-            this.taConnectionInfo.appendText("Game already in progress\n");
-            return;
-        }
-
         try{
             this.server = new Socket(serverAddress, 8888);
-            this.taConnectionInfo.appendText("Connected to server with address " + serverAddress + "\n");
-            this.match = new MatchService(server);
-            match.setOutputLog(this.taConnectionInfo);
-            // Wait for server to find match
-            // If no match is found, present user with error box.
-            new Thread(match).start();
-
-            this.gameInProgress = true;
-
+            System.out.println("Connected to server with address " + serverAddress + "\n");
         }catch (IOException ex){
+            ex.printStackTrace();
             new Alert(Alert.AlertType.ERROR, "An error occurred during initialization of match/connection.").show();
         }
+        System.out.println("Creating new session handler");
+        this.clientSessionHandler = new ClientSessionHandler(this.server, this.taConnectionInfo); //Getting stuck here
+        System.out.println("Created ClientSessionHandler connected to " + this.server.getInetAddress());
+        new Thread(this.clientSessionHandler).start();
     }
 
     private void disconnectFromServer() throws IOException{
         if(this.server != null){
-            this.match.endMatch();
             this.server.close();
         }
     }
-
 
     public static void main(String[] args) {
         launch(args);

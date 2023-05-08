@@ -17,7 +17,6 @@ public class ConnectionService implements Runnable{
     }
 
     public void run(){
-
         this.running = true;
 
         try{
@@ -36,8 +35,8 @@ public class ConnectionService implements Runnable{
             Socket player2Socket = serverSocket.accept();
             System.out.println("Client connected with address " + player2Socket.getInetAddress());
             if(player1Socket.isConnected() && player2Socket.isConnected()){
-                SessionHandler session = new SessionHandler(player1Socket, player2Socket);
-                es.execute(session);
+                System.out.println("Spawning session handler");
+                es.execute(new ServerSessionHandler(player1Socket, player2Socket));
             }
         }
     }
