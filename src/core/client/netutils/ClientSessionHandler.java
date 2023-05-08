@@ -17,18 +17,14 @@ public class ClientSessionHandler implements Runnable, NimNetworkSignals{
     private TextArea taOutputArea;
     private boolean sessionActive;
 
-    public ClientSessionHandler(Socket server, TextArea taOutputArea){
+    public ClientSessionHandler(Socket server, TextArea taOutputArea) throws IOException{
         this.server = server;
         this.taOutputArea = taOutputArea;
-        try{
-            System.out.println("Initializing streams");
-            this.fromServer = new ObjectInputStream(this.server.getInputStream());
-            System.out.println("fromServer initialized");
-            this.toServer = new ObjectOutputStream(this.server.getOutputStream());
-            System.out.println("toServer initialized");
-        } catch(IOException ex){
-            ex.printStackTrace();
-        }
+        System.out.println("Initializing streams");
+        this.fromServer = new ObjectInputStream(this.server.getInputStream());
+        System.out.println("fromServer initialized");
+        this.toServer = new ObjectOutputStream(this.server.getOutputStream());
+        System.out.println("toServer initialized");
         this.sessionActive = true;
     }
 

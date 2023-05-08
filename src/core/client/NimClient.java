@@ -69,14 +69,15 @@ public class NimClient extends Application{
         try{
             this.server = new Socket(serverAddress, 8888);
             System.out.println("Connected to server with address " + serverAddress + "\n");
+            System.out.println("Creating new session handler");
+            this.clientSessionHandler = new ClientSessionHandler(this.server, this.taConnectionInfo); //Getting stuck here
+            System.out.println("Created ClientSessionHandler connected to " + this.server.getInetAddress());
+            new Thread(this.clientSessionHandler).start();
         }catch (IOException ex){
             ex.printStackTrace();
             new Alert(Alert.AlertType.ERROR, "An error occurred during initialization of match/connection.").show();
         }
-        System.out.println("Creating new session handler");
-        this.clientSessionHandler = new ClientSessionHandler(this.server, this.taConnectionInfo); //Getting stuck here
-        System.out.println("Created ClientSessionHandler connected to " + this.server.getInetAddress());
-        new Thread(this.clientSessionHandler).start();
+
     }
 
     private void disconnectFromServer() throws IOException{
