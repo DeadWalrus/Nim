@@ -47,7 +47,6 @@ public class NimClient extends Application{
                System.out.println("Could not close connection to server");
            }
         });
-
     }
 
     /**
@@ -77,7 +76,6 @@ public class NimClient extends Application{
             ex.printStackTrace();
             new Alert(Alert.AlertType.ERROR, "An error occurred during initialization of match/connection.").show();
         }
-
     }
 
     private void disconnectFromServer() throws IOException{

@@ -37,6 +37,7 @@ public class ConnectionService implements Runnable{
             if(player1Socket.isConnected() && player2Socket.isConnected()){
                 System.out.println("Spawning session handler");
                 es.execute(new ServerSessionHandler(player1Socket, player2Socket));
+
             }
         }
     }

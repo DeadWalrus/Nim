@@ -11,8 +11,8 @@ import java.net.Socket;
 
 public class ClientSessionHandler implements Runnable, NimNetworkSignals{
     private Socket server;
-    private ObjectInputStream fromServer;
-    private ObjectOutputStream toServer;
+    private final ObjectInputStream fromServer;
+    private final ObjectOutputStream toServer;
     private ClientDataTransferService cdts;
     private TextArea taOutputArea;
     private boolean sessionActive;
