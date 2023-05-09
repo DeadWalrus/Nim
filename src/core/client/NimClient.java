@@ -56,7 +56,10 @@ public class NimClient extends Application{
         HBox bottom = new HBox();
         TextField tfServerAddress = new TextField("localhost");
         Button btConnect = new Button("Connect");
-        btConnect.setOnAction(e -> connectToServer(tfServerAddress.getText()));
+        btConnect.setOnAction(e -> {
+            connectToServer(tfServerAddress.getText());
+            new Thread(this.clientSessionHandler).start();
+        });
         bottom.getChildren().addAll(tfServerAddress, btConnect);
         return bottom;
     }
@@ -71,7 +74,7 @@ public class NimClient extends Application{
             System.out.println("Creating new session handler");
             this.clientSessionHandler = new ClientSessionHandler(this.server, this.taConnectionInfo); //Getting stuck here
             System.out.println("Created ClientSessionHandler connected to " + this.server.getInetAddress());
-            new Thread(this.clientSessionHandler).start();
+
         }catch (IOException ex){
             ex.printStackTrace();
             new Alert(Alert.AlertType.ERROR, "An error occurred during initialization of match/connection.").show();
@@ -87,4 +90,5 @@ public class NimClient extends Application{
     public static void main(String[] args) {
         launch(args);
     }
+
 }

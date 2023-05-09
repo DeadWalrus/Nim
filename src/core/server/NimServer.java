@@ -2,7 +2,6 @@ package core.server;
 
 import core.server.netutils.ConnectionService;
 import javafx.application.Application;
-import javafx.scene.control.TextArea;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -10,7 +9,6 @@ import java.net.ServerSocket;
 
 
 public class NimServer extends Application {
-    TextArea connectionInfo;
     ServerSocket serverSocket;
     public void start(Stage primaryStage){
         // Initialize gui
