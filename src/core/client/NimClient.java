@@ -57,8 +57,14 @@ public class NimClient extends Application{
         TextField tfServerAddress = new TextField("localhost");
         Button btConnect = new Button("Connect");
         btConnect.setOnAction(e -> {
+            if(this.clientSessionHandler != null && this.clientSessionHandler.isSessionActive()){
+                taConnectionInfo.appendText("Session already active");
+                return;
+            }
             connectToServer(tfServerAddress.getText());
             new Thread(this.clientSessionHandler).start();
+            this.nmd.show();
+            this.nmd.setSessionHandler(this.clientSessionHandler);
         });
         bottom.getChildren().addAll(tfServerAddress, btConnect);
         return bottom;
@@ -83,6 +89,9 @@ public class NimClient extends Application{
 
     private void disconnectFromServer() throws IOException{
         if(this.server != null){
+            if(this.clientSessionHandler != null && this.clientSessionHandler.isSessionActive()){
+                this.clientSessionHandler.closeSession();
+            }
             this.server.close();
         }
     }

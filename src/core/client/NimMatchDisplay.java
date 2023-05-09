@@ -1,6 +1,7 @@
 package core.client;
 
 import core.client.gameelements.NimBoard;
+import core.client.netutils.ClientSessionHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.layout.BorderPane;
@@ -11,6 +12,8 @@ import java.io.IOException;
 
 public class NimMatchDisplay extends Stage {
     private NimBoard gameBoard;
+    private ClientSessionHandler clientSessionHandler;
+    private Button completeMove = new Button("Submit Moves");
 
     public NimMatchDisplay(NimBoard gameBoard){
         this.gameBoard = gameBoard;
@@ -18,6 +21,10 @@ public class NimMatchDisplay extends Stage {
         gamePane.setPrefSize(300, 500);
         Scene nimScene = new Scene(gamePane);
         this.setScene(nimScene);
+    }
+    public void setSessionHandler(ClientSessionHandler clientSessionHandler){
+        this.clientSessionHandler = clientSessionHandler;
+        this.clientSessionHandler.setNimBoard(this.gameBoard);
     }
 
     private BorderPane getGamePane(){
@@ -28,19 +35,18 @@ public class NimMatchDisplay extends Stage {
     }
 
     private VBox getGameControlPane(){
-        Button completeMove = new Button("Submit Moves");
-        //completeMove.setOnAction(e -> this.sendBoardData());
+        this.completeMove.setOnAction(e -> this.sendBoardData());
         VBox gameControlPane = new VBox();
-        gameControlPane.getChildren().add(completeMove);
+        gameControlPane.getChildren().add(this.completeMove);
         return gameControlPane;
     }
 
-//    private void sendBoardData(){
-//        try{
-//            this.dts.sendData(90);
-//        } catch(IOException e){
-//            System.out.println("Could not send board data");
-//            e.printStackTrace();
-//        }
-//    }
+    private void sendBoardData(){
+        if(!this.clientSessionHandler.isCurrentTurn()){
+            System.out.println("Not your turn");
+            return;
+        }
+        // If board data is empty, client won the game, send win signal
+        this.clientSessionHandler.sendBoardData(this.gameBoard.getBoardData());
+    }
 }

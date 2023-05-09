@@ -2,12 +2,16 @@ package core.client.netutils;
 
 import core.NimNetworkSignals;
 import core.SignalParser;
+import core.client.gameelements.NimBoard;
+import javafx.application.Platform;
 import javafx.scene.control.TextArea;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.lang.reflect.Array;
 import java.net.Socket;
+import java.util.ArrayList;
 
 public class ClientSessionHandler implements Runnable, NimNetworkSignals{
     //private Socket server;
@@ -16,6 +20,8 @@ public class ClientSessionHandler implements Runnable, NimNetworkSignals{
     private ClientDataTransferService cdts;
     private TextArea taOutputArea;
     private boolean sessionActive;
+    private boolean isTurn;
+    private NimBoard board;
 
     public ClientSessionHandler(Socket server, TextArea taOutputArea) throws IOException{
         this.taOutputArea = taOutputArea;
@@ -27,6 +33,9 @@ public class ClientSessionHandler implements Runnable, NimNetworkSignals{
 
         this.sessionActive = true;
     }
+    public void setNimBoard(NimBoard board){
+        this.board = board;
+    }
 
     public void run(){
         System.out.println("Creating new transfer service");
@@ -37,8 +46,65 @@ public class ClientSessionHandler implements Runnable, NimNetworkSignals{
         if(signal == CONNECTION_PROBE){
             this.cdts.sendSignal(CONNECTION_ESTABLISHED, toServer);
             System.out.println("Signal " + CONNECTION_ESTABLISHED + " sent");
-            // Start the game loop
+            this.sessionActive = true;
+            startGameLoop();
         }
+    }
+    private void startGameLoop(){
+        // Get turn status from server
+        while(this.sessionActive){
+            int signal = this.cdts.getSignal(fromServer);
+            switch(signal){
+                case TURN_INDICATOR -> executeTurn();
+                case BOARD_DATA -> updateBoardData();
+                case CLOSE_CONNECTION -> closeSession();
+            }
+        }
+    }
+
+    private void executeTurn(){
+        this.isTurn = true;
+    }
+
+    private void updateBoardData(){
+        ArrayList<Boolean> boardData = null;
+        try{
+            boardData = (ArrayList<Boolean>) fromServer.readObject();
+        } catch(IOException | ClassNotFoundException ex){
+            ex.printStackTrace();
+            System.out.println("Could not retrieve board data");
+        }
+
+        Platform.runLater(new BoardUpdater(boardData));
+    }
+
+    public void sendBoardData(ArrayList<Boolean> boardData){
+        this.isTurn = false;
+        try{
+            this.cdts.sendSignal(BOARD_DATA, toServer);
+            toServer.writeObject(boardData);
+        } catch(IOException ex){
+            ex.printStackTrace();
+            System.out.println("Could not send board data");
+        }
+    }
+    public void closeSession(){
+        this.cdts.sendSignal(CLOSE_CONNECTION, toServer);
+        this.sessionActive = false;
+        try{
+            this.fromServer.close();
+            this.toServer.close();
+        } catch(IOException ex){
+            ex.printStackTrace();
+            System.out.println("Could not close data streams");
+        }
+
+    }
+    public boolean isSessionActive(){
+        return this.sessionActive;
+    }
+    public boolean isCurrentTurn(){
+        return this.isTurn;
     }
 
     private class ClientDataTransferService implements SignalParser {
@@ -66,7 +132,18 @@ public class ClientSessionHandler implements Runnable, NimNetworkSignals{
                 ex.printStackTrace();
                 System.out.println("Could not get signal from server");
             }
+            System.out.println("Got signal " + signal + " from server");
             return signal;
+        }
+    }
+    private class BoardUpdater implements Runnable{
+        private ArrayList<Boolean> boardData;
+
+        public BoardUpdater(ArrayList<Boolean> boardData){
+            this.boardData = boardData;
+        }
+        public void run(){
+            board.updateBoard(this.boardData);
         }
     }
 }

@@ -46,18 +46,63 @@ public class ServerSessionHandler implements Runnable, NimNetworkSignals{
         // If the players respond with CONNECTION_ESTABLISHED signal, start the game loop
         if(player1Status == CONNECTION_ESTABLISHED && player2Status == CONNECTION_ESTABLISHED){
             this.gameIsRunning = true;
-            sessionLoop();
+            try{
+                sessionLoop();
+            } catch(IOException ex){
+                ex.printStackTrace();
+                System.out.println("Problem occurred in session loop");
+            }
+
         }
     }
 
-    private void sessionLoop(){
+    private void sessionLoop() throws IOException{
+        ObjectInputStream currentPlayerInput = this.fromPlayer1;
+        ObjectOutputStream currentPlayerOutput = this.toPlayer1;
+        ObjectInputStream waitingPlayerInput = this.fromPlayer2;
+        ObjectOutputStream waitingPlayerOutput = this.toPlayer2;
         while(this.gameIsRunning){
-
+            this.sdts.sendSignal(NimNetworkSignals.TURN_INDICATOR, currentPlayerOutput);
+            // Get signal from player
+            int signal = this.sdts.getSignal(currentPlayerInput);
+            // If signal isn't session term signal
+            if(signal == CLOSE_CONNECTION){
+                this.endSession();
+                return;
+            }
+            // Get move from player
+            this.sdts.sendSignal(BOARD_DATA, waitingPlayerOutput);
+            try{
+                waitingPlayerOutput.writeObject(currentPlayerInput.readObject());
+            } catch(ClassNotFoundException ex){
+                ex.printStackTrace();
+                System.out.println("Could not relay data to player");
+            }
+            // Swap players
+            ObjectInputStream tempIn = currentPlayerInput;
+            currentPlayerInput = waitingPlayerInput;
+            waitingPlayerInput = tempIn;
+            ObjectOutputStream tempOut = currentPlayerOutput;
+            currentPlayerOutput = waitingPlayerOutput;
+            waitingPlayerOutput = tempOut;
         }
     }
+
 
     // End the session
     private void endSession(){
+        try{
+            this.gameIsRunning = false;
+            this.toPlayer1.close();
+            this.fromPlayer1.close();
+            this.player1.close();
+            this.toPlayer2.close();
+            this.fromPlayer2.close();
+            this.player2.close();
+        } catch(IOException ex){
+            ex.printStackTrace();
+            System.out.println("Could not end session");
+        }
     }
 
     private class ServerDataTransferService implements SignalParser {
