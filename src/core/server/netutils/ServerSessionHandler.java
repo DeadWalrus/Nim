@@ -19,24 +19,20 @@ public class ServerSessionHandler implements Runnable, NimNetworkSignals{
     private ServerDataTransferService sdts;
 
 
-    public ServerSessionHandler(Socket player1, Socket player2){
+    public ServerSessionHandler(Socket player1, Socket player2) throws IOException{
         this.player1 = player1;
         this.player2 = player2;
-        try {
-            System.out.println("initializing streams");
-            this.fromPlayer1 = new ObjectInputStream(this.player1.getInputStream());
-            this.toPlayer1 = new ObjectOutputStream(this.player1.getOutputStream());
-            this.fromPlayer2 = new ObjectInputStream(this.player2.getInputStream());
-            this.toPlayer2 = new ObjectOutputStream(this.player2.getOutputStream());
-            System.out.println("streams initialized");
-        } catch(IOException e){
-            e.printStackTrace();
-            System.out.println("Could not initialize object streams");
-        }
+        System.out.println("initializing streams");
+        this.fromPlayer1 = new ObjectInputStream(this.player1.getInputStream());
+        this.toPlayer1 = new ObjectOutputStream(this.player1.getOutputStream());
+        this.fromPlayer2 = new ObjectInputStream(this.player2.getInputStream());
+        this.toPlayer2 = new ObjectOutputStream(this.player2.getOutputStream());
+        System.out.println("streams initialized");
         System.out.println("Session handler spawned");
     }
 
     public void run(){
+        System.out.println("Creating new transfer service");
         this.sdts = new ServerDataTransferService();
         System.out.println("Sending signals");
         sdts.sendSignal(TEST_SIGNAL, toPlayer1);

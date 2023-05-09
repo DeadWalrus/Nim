@@ -29,22 +29,10 @@ public class ClientSessionHandler implements Runnable, NimNetworkSignals{
     }
 
     public void run(){
+        System.out.println("Creating new transfer service");
         this.cdts = new ClientDataTransferService();
         // While the session is running, listen for data from server and act upon it
-        while(this.sessionActive){
-            System.out.println("Getting signal");
-            int signal = cdts.getSignal();
-            System.out.println(signal);
-            switch(signal){
-                case TEST_SIGNAL -> Platform.runLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        System.out.println("Appending text");
-                        taOutputArea.appendText(signal + "");
-                    }
-                });
-            }
-        }
+
     }
 
     private class ClientDataTransferService{
