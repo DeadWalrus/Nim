@@ -31,7 +31,7 @@ public class NimClient extends Application{
 
         this.taConnectionInfo = new TextArea();
         this.nimBoard = new NimBoard();
-        this.nmd = new NimMatchDisplay(this.nimBoard);
+
         primaryPane.setCenter(this.taConnectionInfo);
         Scene primaryScene = new Scene(primaryPane);
         primaryStage.setScene(primaryScene);
@@ -63,8 +63,8 @@ public class NimClient extends Application{
             }
             connectToServer(tfServerAddress.getText());
             new Thread(this.clientSessionHandler).start();
+            this.nmd = new NimMatchDisplay(this.nimBoard, this.clientSessionHandler);
             this.nmd.show();
-            this.nmd.setSessionHandler(this.clientSessionHandler);
         });
         bottom.getChildren().addAll(tfServerAddress, btConnect);
         return bottom;
@@ -76,10 +76,10 @@ public class NimClient extends Application{
     private void connectToServer(String serverAddress){
         try{
             this.server = new Socket(serverAddress, 8888);
-            System.out.println("Connected to server with address " + serverAddress + "\n");
-            System.out.println("Creating new session handler");
+            this.taConnectionInfo.appendText("Connected to server with address " + serverAddress + "\n");
+            this.taConnectionInfo.appendText("Creating new session handler");
             this.clientSessionHandler = new ClientSessionHandler(this.server, this.taConnectionInfo); //Getting stuck here
-            System.out.println("Created ClientSessionHandler connected to " + this.server.getInetAddress());
+            this.taConnectionInfo.appendText("Created ClientSessionHandler connected to " + this.server.getInetAddress());
 
         }catch (IOException ex){
             ex.printStackTrace();
@@ -90,7 +90,7 @@ public class NimClient extends Application{
     private void disconnectFromServer() throws IOException{
         if(this.server != null){
             if(this.clientSessionHandler != null && this.clientSessionHandler.isSessionActive()){
-                this.clientSessionHandler.closeSession();
+                this.clientSessionHandler.closeSession(true);
             }
             this.server.close();
         }

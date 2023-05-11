@@ -67,7 +67,7 @@ public class ServerSessionHandler implements Runnable, NimNetworkSignals{
             int signal = this.sdts.getSignal(currentPlayerInput);
             // If signal isn't session term signal
             if(signal == CLOSE_CONNECTION){
-                this.endSession();
+                this.endSession(waitingPlayerOutput);
                 return;
             }
             // Get move from player
@@ -90,7 +90,14 @@ public class ServerSessionHandler implements Runnable, NimNetworkSignals{
 
 
     // End the session
-    private void endSession(){
+    private void endSession(ObjectOutputStream... playerOut){
+        for(ObjectOutputStream p : playerOut){
+            try{
+                p.writeInt(CLOSE_CONNECTION);
+            } catch(IOException ex){
+                System.out.println("Could not send term signal to player");
+            }
+        }
         try{
             this.gameIsRunning = false;
             this.toPlayer1.close();

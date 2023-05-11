@@ -9,28 +9,25 @@ import javafx.scene.control.TextArea;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.lang.reflect.Array;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.List;
 
 public class ClientSessionHandler implements Runnable, NimNetworkSignals{
-    //private Socket server;
     private final ObjectInputStream fromServer;
     private final ObjectOutputStream toServer;
     private ClientDataTransferService cdts;
-    private TextArea taOutputArea;
+    private final TextArea taOutputArea;
     private boolean sessionActive;
     private boolean isTurn;
     private NimBoard board;
 
     public ClientSessionHandler(Socket server, TextArea taOutputArea) throws IOException{
         this.taOutputArea = taOutputArea;
-        System.out.println("Initializing streams");
+        this.taOutputArea.appendText("Initializing streams\n");
         this.toServer = new ObjectOutputStream(server.getOutputStream()); // Initialize outputstream first???
-        System.out.println("toServer initialized");
         this.fromServer = new ObjectInputStream(server.getInputStream());
-        System.out.println("fromServer initialized");
-
+        this.taOutputArea.appendText("Streams initialized\n");
         this.sessionActive = true;
     }
     public void setNimBoard(NimBoard board){
@@ -38,14 +35,14 @@ public class ClientSessionHandler implements Runnable, NimNetworkSignals{
     }
 
     public void run(){
-        System.out.println("Creating new transfer service");
+        this.taOutputArea.appendText("Creating new transfer service\n");
         this.cdts = new ClientDataTransferService();
         // While the session is running, listen for data from server and act upon it
         int signal = this.cdts.getSignal(fromServer);
         this.taOutputArea.appendText(signal + "");
         if(signal == CONNECTION_PROBE){
             this.cdts.sendSignal(CONNECTION_ESTABLISHED, toServer);
-            System.out.println("Signal " + CONNECTION_ESTABLISHED + " sent");
+            this.taOutputArea.appendText("Signal " + CONNECTION_ESTABLISHED + " sent\n");
             this.sessionActive = true;
             startGameLoop();
         }
@@ -57,7 +54,8 @@ public class ClientSessionHandler implements Runnable, NimNetworkSignals{
             switch(signal){
                 case TURN_INDICATOR -> executeTurn();
                 case BOARD_DATA -> updateBoardData();
-                case CLOSE_CONNECTION -> closeSession();
+                case CLOSE_CONNECTION -> closeSession(false);
+                default -> closeSession(true);
             }
         }
     }
@@ -72,31 +70,33 @@ public class ClientSessionHandler implements Runnable, NimNetworkSignals{
             boardData = (ArrayList<Boolean>) fromServer.readObject();
         } catch(IOException | ClassNotFoundException ex){
             ex.printStackTrace();
-            System.out.println("Could not retrieve board data");
+            this.taOutputArea.appendText("Could not retrieve board data\n");
         }
 
         Platform.runLater(new BoardUpdater(boardData));
     }
 
-    public void sendBoardData(ArrayList<Boolean> boardData){
+    public void sendBoardData(List<Boolean> boardData){
         this.isTurn = false;
         try{
             this.cdts.sendSignal(BOARD_DATA, toServer);
             toServer.writeObject(boardData);
         } catch(IOException ex){
             ex.printStackTrace();
-            System.out.println("Could not send board data");
+            this.taOutputArea.appendText("Could not send board data\n");
         }
     }
-    public void closeSession(){
-        this.cdts.sendSignal(CLOSE_CONNECTION, toServer);
+    public void closeSession(boolean sendCloseSignal){
+        if(sendCloseSignal){
+            this.cdts.sendSignal(CLOSE_CONNECTION, toServer);
+        }
         this.sessionActive = false;
         try{
             this.fromServer.close();
             this.toServer.close();
         } catch(IOException ex){
             ex.printStackTrace();
-            System.out.println("Could not close data streams");
+            this.taOutputArea.appendText("Could not close data streams\n");
         }
 
     }
@@ -109,30 +109,30 @@ public class ClientSessionHandler implements Runnable, NimNetworkSignals{
 
     private class ClientDataTransferService implements SignalParser {
         public ClientDataTransferService(){
-            System.out.println("Created new ClientDataTransferService");
+            taOutputArea.appendText("Created new ClientDataTransferService\n");
         }
 
         public void sendSignal(int signal, ObjectOutputStream toServer){
-            System.out.println("Sending signal");
+            taOutputArea.appendText("Sending signal\n");
             try{
                 toServer.writeInt(signal);
                 toServer.flush();
             } catch(IOException ex){
                 ex.printStackTrace();
-                System.out.println("Could not send signal to server");
+                taOutputArea.appendText("Could not send signal to server\n");
             }
         }
 
         public int getSignal(ObjectInputStream fromServer){
-            System.out.println("Getting signal");
+            taOutputArea.appendText("Getting signal\n");
             int signal = 0;
             try{
                 signal = fromServer.readInt();
             } catch(IOException ex){
                 ex.printStackTrace();
-                System.out.println("Could not get signal from server");
+                taOutputArea.appendText("Could not get signal from server\n");
             }
-            System.out.println("Got signal " + signal + " from server");
+            taOutputArea.appendText("Got signal " + signal + " from server\n");
             return signal;
         }
     }
