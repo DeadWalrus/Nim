@@ -198,7 +198,7 @@ public class ClientSessionHandler implements Runnable, NimNetworkSignals{
                 toServer.writeInt(signal);
                 toServer.flush();
             } catch(IOException ex){
-                ex.printStackTrace();
+                //ex.printStackTrace();
                 taOutputArea.appendText("Could not send signal to server\n");
             }
             taOutputArea.appendText("Signal " + signal + " sent\n");
@@ -211,9 +211,8 @@ public class ClientSessionHandler implements Runnable, NimNetworkSignals{
             try{
                 signal = fromServer.readInt();
             } catch(IOException ex){
-                ex.printStackTrace();
                 taOutputArea.appendText("Could not get signal from server\n");
-            }
+            } 
             taOutputArea.appendText("Got signal " + signal + " from server\n");
             return signal;
         }
