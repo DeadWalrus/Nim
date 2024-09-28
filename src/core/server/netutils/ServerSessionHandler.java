@@ -72,6 +72,7 @@ public class ServerSessionHandler implements Runnable, NimNetworkSignals{
      * Handles the relay of game data and connection events such as a disconnect from one of the players.
      * @throws IOException when game data cannot be read from player
      */
+    @SuppressWarnings("unchecked")
     private void sessionLoop() throws IOException{
         ObjectInputStream currentPlayerInput = this.fromPlayer1;
         ObjectOutputStream currentPlayerOutput = this.toPlayer1;
@@ -87,9 +88,13 @@ public class ServerSessionHandler implements Runnable, NimNetworkSignals{
                 return;
             }
             // Get move from player
-
+            
             try{
-                ArrayList<Boolean> stickStatus = (ArrayList<Boolean>) currentPlayerInput.readObject();
+                
+                Object serverStickData = currentPlayerInput.readObject();
+                // this is fine.
+                
+                ArrayList<Boolean> stickStatus = (ArrayList<Boolean>) serverStickData;
                 if(currentPlayerLost(stickStatus)){
                     this.sdts.sendSignal(LOSE_SIGNAL, currentPlayerOutput);
                     this.sdts.sendSignal(WON_SIGNAL, waitingPlayerOutput);

@@ -97,10 +97,15 @@ public class ClientSessionHandler implements Runnable, NimNetworkSignals{
     /**
      * Update the board with board data from other client
      */
+    @SuppressWarnings("unchecked")
     private void updateBoardData(){
         ArrayList<Boolean> boardData = null;
+        
         try{
-            boardData = (ArrayList<Boolean>) fromServer.readObject();
+            Object serverBoardData = fromServer.readObject();
+            // this is fine.
+            boardData = (ArrayList<Boolean>) serverBoardData;
+            //boardData = (ArrayList<Boolean>) fromServer.readObject();
         } catch(IOException | ClassNotFoundException ex){
             ex.printStackTrace();
             this.taOutputArea.appendText("Could not retrieve board data\n");
