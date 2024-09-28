@@ -151,7 +151,6 @@ public class ServerSessionHandler implements Runnable, NimNetworkSignals{
             this.fromPlayer2.close();
             this.player2.close();
         } catch(IOException ex){
-            ex.printStackTrace();
             System.out.println("Could not end session");
         }
     }
